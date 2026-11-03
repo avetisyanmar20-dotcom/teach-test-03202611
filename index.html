@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ԳԹԿ Ուսուցչի կամավոր ատեստավորման թեստ — Տեխնոլոգիա (60 հարց)</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { margin: 0; font-size: 1.25rem; }
+        #timer {
+            background-color: var(--danger-color);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 15px;
+            background: #f1f5f9;
+            font-weight: bold;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .question-grid {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .q-btn {
+            aspect-ratio: 1;
+            border: 1px solid #cbd5e1;
+            background: white;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .q-btn.current { border-color: var(--secondary-color); background: #eff6ff; color: var(--secondary-color); }
+        .q-btn.answered { background: var(--success-color); color: white; border-color: var(--success-color); }
+        
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .question-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .question-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; }
+        .options-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .option-item:hover { background: #f8fafc; }
+        .option-item input { cursor: pointer; }
+        
+        .navigation-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-primary { background-color: var(--secondary-color); }
+        .btn-success { background-color: var(--success-color); }
+        .btn-danger { background-color: var(--danger-color); }
+        .btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>ԳԹԿ Ուսուցչի կամավոր ատեստավորման թեստ — Տեխնոլոգիա (60 հարց)</h1>
+    <div id="timer">03:00:00</div>
+</header>
+
+<div class="main-container">
+    <sidebar>
+        <div class="sidebar-header">ՀԱՐՑԵՐԻ ՑԱՆԿ (1-60)</div>
+        <div class="question-grid" id="questionGrid"></div>
+        <div style="padding: 15px; border-top: 1px solid #e2e8f0;">
+            <button class="btn btn-danger" style="width: 100%;" onclick="finishTest()">ԱՎԱՐՏԵԼ ԹԵՍՏԸ</button>
+        </div>
+    </sidebar>
+
+    <div class="content-area">
+        <div class="question-box">
+            <div class="question-title" id="questionTitle">Բեռնվում է հարցը...</div>
+            <div class="options-list" id="optionsList"></div>
+            <button class="btn btn-success" onclick="saveCurrentAnswer()">ՊԱՀՊԱՆԵԼ ՊԱՏԱՍԽԱՆԸ</button>
+        </div>
+        
+        <div class="navigation-bar">
+            <button class="btn btn-primary" onclick="prevQuestion()">← Նախորդը</button>
+            <button class="btn btn-success" onclick="nextQuestion()">Հաջորդը →</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { id: 1, title: "Հարց 1.", text: "Ո՞ր շարքի երկրաչափական մարմիններն են նիստավոր․", options: ["կոն, գլան, գունդ", "բուրգ, պրիզմա, կոն", "բուրգ, պրիզմա, խորանարդ", "բուրգ, պրիզմա, գլան"], correct: [2], multiple: false, selected: null },
+        { id: 2, title: "Հարց 3.", text: "Ո՞ր չափերն ենք նշում խորանարդի և զուգահեռանիստի վրա․", options: ["երկարություն", "հաստություն", "լայնություն", "բարձրություն", "հիմք", "հատակ", "խորություն"], correct: [0, 2, 3], multiple: true, selected: [] },
+        { id: 3, title: "Հարց 4.", text: "Ինչպե՞ս են որոշվում գլանի և կոնի չափերը․", options: ["երկարությամբ և հիմքի պատկերի չափով", "բարձրությամբ և հիմքի տրամագծով", "լայնությամբ և հիմքի տրամագծով", "հաստությամբ և հիմքի պատկերի չափերով"], correct: [1], multiple: false, selected: null },
+        { id: 4, title: "Հարց 5.", text: "Քանի՞ անգամ են գծագրի վրա նշում յուրաքանչյուր չափ․", options: ["միայն մեկ անգամ", "երկու և ավելի", "յուրաքանչյուր տեսքում մեկ անգամ", "մի քանի անգամ, որ հասկանալի լինի"], correct: [0], multiple: false, selected: null },
+        { id: 5, title: "Հարց 6.", text: "Ի՞նչ է աշխատատեղը․", options: ["Աշխատատեղ կոչվում է դասարանի որոշակի տեղամաս...", "Աշխատատեղ կոչվում է արհեստանոցի որոշակի տեղամաս...", "Աշխատատեղ կոչվում է արհեստանոցը...", "Աշխատատեղ կոչվում է ցանկացած տեղամաս..."], correct: [1], multiple: false, selected: null },
+        { id: 6, title: "Հարց 7.", text: "Ո՞րն է մետաղները ձեռքի գործիքներով մշակելու հիմնական սարքավորումը․", options: ["մամլակը", "գործիքներն ու հարմարանքները", "փականագործական դազգահը", "ատաղծագործական դազգահը"], correct: [2], multiple: false, selected: null },
+        { id: 7, title: "Հարց 8.", text: "Ինչպիսի՞ն են լինում փականագործական դազգահները․", options: ["մեկ կամ երկու աշխատողի համար", "երկու և շատ աշխատողների համար", "մեկ աշխատողի համար և բազմատեղ", "միայն բազմատեղ"], correct: [2], multiple: false, selected: null },
+        { id: 8, title: "Հարց 9.", text: "Ելնելով աշխատանքի բնույթից՝ ինչպիսի՞ մամլակներ են օգտագործում․", options: ["հիմնատակով", "զուգահեռ շուրթերով", "պատվանդանային", "ատաղծագործական", "ուղղահայաց շուրթերով", "ձեռքի հոդակապավոր", "զուգահեռ պտուտակներով"], correct: [1, 2, 5], multiple: true, selected: [] },
+        { id: 9, title: "Հարց 10.", text: "Ո՞րոնք են փականագործական մամլակների հիմնական բնութագրիչները․", options: ["շուրթերի լայնությունն ու երկարությունը", "շուրթերի լայնությունն ու հաստությունը", "շուրթերի երկարությունն ու հաստությունը", "շուրթերի լայնությունն ու բացման տիրույթը"], correct: [3], multiple: false, selected: null },
+        { id: 10, title: "Հարց 11.", text: "Որքա՞ն կարող է լինել պատվանդանային մամլակների շուրթերի լայնությունը և բացվածքը.", options: ["Լայնությունը՝ 100, 130, 150 և 180 մմ, բացվածքը՝ 90, 130, 150 և 180 մմ", "Լայնությունը՝ 80, 130, 150 և 160 մմ...", "Լայնությունը՝ 120, 130, 140 և 150 մմ...", "Լայնությունը՝ 190, 180, 150 և 140 մմ..."], correct: [0], multiple: false, selected: null },
+        { id: 11, title: "Հարց 12.", text: "Ի՞նչ է նախագծումը․", options: ["Արդեն արտադրվածի գործընթաց", "Որակապես տարբերվող նորի ստեղծման գործընթաց", "Չտարբերվող շինվածքի ստեղծում", "Ընդհանուր գործընթաց"], correct: [1], multiple: false, selected: null },
+        { id: 12, title: "Հարց 13.", text: "Պահանջմունքի պայմաններին բավարարող օբյեկտի սինթեզման որոնման գործընթացը․", options: ["արտադրական գործընթաց", "կոնստրուկտորավորման փուլ", "նախագծում", "տեխնոլոգիական գործընթաց"], correct: [2], multiple: false, selected: null },
+        { id: 13, title: "Հարց 14.", text: "Ինչպե՞ս է բացվում ՏՓՄՀ հապավումը․", options: ["տնտեսական փաստաթղթերի միասնական համակարգ", "տեխնիկական փաստերի միասնական համակարգ", "տեխնոլոգիական փաստաթղթերի միասնական համակարգ", "տրանսպորտային փաստաթղթերի միասնական համակարգ"], correct: [2], multiple: false, selected: null },
+        { id: 14, title: "Հարց 15.", text: "Նախագծման ինչպիսի՞ տեսակներով է իրականացվում տեխնիկական նախապատրաստումը․", options: ["կոնստրուկտորական և հետազոտական", "կոնստրուկտորական և տեխնոլոգիական", "տեխնոլոգիական և հետազոտական", "որոնողահետազոտական և տեխնոլոգիական"], correct: [1], multiple: false, selected: null },
+        { id: 15, title: "Հարց 16.", text: "Դետալի արտաքին չափսերը 0,01 մմ ճշգրտությամբ չափող միկրոմետրը կազմված է.", options: ["վերին և ներքին շուրթեր", "ճարմանդ՝ կրունկի և ձողի հետ", "խորաչափ", "զարկան", "միկրոմետրական պտուտակ", "ճչանակ", "թմբուկ"], correct: [1, 4, 5, 6], multiple: true, selected: [] },
+        { id: 16, title: "Հարց 17.", text: "Առանց սանդղակի չափիչ-ստուգիչ գործիքներ են.", options: ["սալերը, անկյունակները, ձևանմուշները", "ձողակարկինները", "ձողագործիքները", "միկրոմետր խորաչափը", "արանքաչափիչները", "ստուգիչ քանոնները, կալիբրները", "միկրոմետրերը"], correct: [0, 4, 5], multiple: true, selected: [] },
+        { id: 17, title: "Հարց 18.", text: "Ի՞նչ տվյալներ են նշված պարուրաձև ձևանմուշների վրա.", options: ["պարուրակի քայլի մեծությունը և տեսակը", "ներքին տրամագիծը", "նյութի մակնիշը", "արտաքին տրամագիծը"], correct: [0], multiple: false, selected: null },
+        { id: 18, title: "Հարց 19.", text: "Եթե հատվածը բաժանում ենք 4։5 հարաբերությամբ, նախ բաժանում ենք․", options: ["5 մասի", "3 մասի", "2 մասի", "9 հավասար մասերի"], correct: [3], multiple: false, selected: null },
+        { id: 19, title: "Հարց 20.", text: "Փափուկ խաղալիքների համար օգտագործվող խիտ, ամուր ու խավոտ գործվածքներ․", options: ["թավիշ", "մետաքս", "ֆլանել", "բումազ", "ատլաս", "մահուդ", "կտոր"], correct: [0, 2, 3, 5], multiple: true, selected: [] },
+        { id: 20, title: "Հարց 21.", text: "Շինվածքի նախագծման ժամանակ հիմնականում հաշվի առնվող պահանջներ․", options: ["տեխնիկական", "տեխնոլոգիական", "հոգևոր", "հիգիենիկ", "բնապահպանական", "անվտանգության", "էրգոնոմիկական"], correct: [1, 4, 5, 6], multiple: true, selected: [] },
+        { id: 21, title: "Հարց 22.", text: "Ի՞նչ է <<էսթետիկա>>-ն․", options: ["տեխնիկական գեղանկարչություն", "տեխնիկական գեղագիտություն", "գեղեցկության չափանիշ", "նրբագեղություն"], correct: [1], multiple: false, selected: null },
+        { id: 22, title: "Հարց 23.", text: "Մետաղագործական զարգացած ճյուղերը հին և միջնադարյան Հայաստանում․", options: ["դարբնություն", "ոսկերչություն", "զինագործություն", "բրուտագործություն", "ատաղծագործություն", "բրոնզագործություն", "պղնձագործություն"], correct: [0, 1, 2, 5, 6], multiple: true, selected: [] },
+        { id: 23, title: "Հարց 38.", text: "Եթե շինվածքը կազմված է մի քանի դետալից, ապա դրանցից յուրաքանչյուրի համար․", options: ["ոչ բոլորի համար է պետք տեխնոլոգիական քարտ", "անհրաժեշտ չէ քարտ", "անհրաժեշտ է կազմել տեխնոլոգիական քարտ", "մեկ քարտը բավարար է բոլորին"], correct: [2], multiple: false, selected: null },
+        { id: 24, title: "Հարց 39.", text: "Ինչի՞ համար է նախատեսված գդալաձև շաղափը․", options: ["6..60 մմ անցքերի համար", "6..40 մմ տրամագծով անցքերի շաղափման համար", "լայնական ուղղությամբ 6..40 մմ", "լայնական ուղղությամբ 6..60 մմ"], correct: [1], multiple: false, selected: null },
+        { id: 25, title: "Հարց 40.", text: "Ուղղաձիգ ամրակապման ժամանակ անցքի կենտրոնի բարձրությունը պետք է լինի․", options: ["ուսերի մակարդակին", "ծնկների մակարդակին", "գոտկատեղի մակարդակին", "թևերի մակարդակին"], correct: [2], multiple: false, selected: null },
+        { id: 26, title: "Հարց 41.", text: "Ձեռնարկատիրական գործունեության գլխավոր նախապայմանը․", options: ["շահույթի հավասարաչափ բաշխում", "նյութական, հոգևոր, սոցիալական և այլ եկամուտների ստացումը", "բյուջեի ստեղծում", "բարեգործություն"], correct: [1], multiple: false, selected: null },
+        { id: 27, title: "Հարց 42.", text: "Նոր միտք և բիզնես գաղափար ստեղծողներն են․", options: ["իմաստուններ", "գիտնականներ", "ձեռներեցներ", "գործառուներ"], correct: [2], multiple: false, selected: null },
+        { id: 28, title: "Հարց 43.", text: "Տնտեսության նյութական արտադրության /ապրանքների/ ոլորտներ չեն․", options: ["հաց թխելը", "բժշկական ծառայությունները", "տրանսպորտային ծառայությունները", "մեքենաներ արտադրելը", "շինարարությունը", "հագուստ վաճառելը", "կոշիկ արտադրելը"], correct: [1, 2, 5], multiple: true, selected: [] },
+        { id: 29, title: "Հարց 44.", text: "Ինչպե՞ս խարտել ուղիղ և ողորկ մակերևույթներ ստանալու համար․", options: ["20-30 աստիճան անկյան տակ", "երկու ուղղությամբ", "մի քանի ուղղություններով ՝ 40º․․․90º անկյունների տակ", "մեկ ուղղությամբ"], correct: [2], multiple: false, selected: null },
+        { id: 30, title: "Հարց 45.", text: "Նշված նյութերից որո՞նք են մեկուսիչներ․", options: ["փայտը", "մարդու մարմինը", "գրաֆիտը", "պլաստմասսան", "նավթը", "ռետինե նյութերը", "յուղը"], correct: [0, 3, 4, 5, 6], multiple: true, selected: [] },
+        { id: 31, title: "Հարց 46.", text: "Ի՞նչ է ցոկոլը․", options: ["շիկաթելիկ", "շիկացման լամպի ապակե լամպանոթ", "շիկացման լամպի պտուտակավոր մետաղական լամպակոթ", "հալոգենային լամպի տեսակ"], correct: [2], multiple: false, selected: null },
+        { id: 32, title: "Հարց 47.", text: "Ընտանիքի պահանջմունքների մակարդակներն են․", options: ["կարևոր", "հոգևոր", "ցանկալի, բայց ոչ պարտադիր", "շքեղ", "վերջնական", "պարտադիր", "հրատապ"], correct: [2, 3, 5, 6], multiple: true, selected: [] },
+        { id: 33, title: "Հարց 48.", text: "Արտադրական ռիսկի օրինակներ են․", options: ["արտադրանքը սպառողին մատակարարելու պլանի ձախողումը", "արտարժույթի տատանումները", "արժեթղթերի պահանջարկ չունենալը", "սխալ գնային քաղաքականություն վարելը", "իրացման շուկայի կորուստը", "վարկի տոկոսադրույքը", "գնի նվազեցումը"], correct: [0, 3, 4], multiple: true, selected: [] },
+        { id: 34, title: "Հարց 49.", text: "Խոհանոցային տարրերի դասավորման ճիշտ հաջորդականություն․", options: ["լվացակոնք, աշխատանքային...", "լվացակոնք, աշխատանքային...", "սառնարան, լվացակոնք, աշխատանքային պահարան, սեղան, սալօջախ, սպասքասեղան", "սառնարան, սեղան..."], correct: [2], multiple: false, selected: null },
+        { id: 35, title: "Հարց 50.", text: "Սպասքադրման ժամանակ ավելի շուտ օգտագործվող տարրերը պետք է դրվեն․", options: ["ափսեի դիմաց", "աջ կողմում", "ափսեին ավելի մոտ", "ափսեից ավելի հեռու"], correct: [3], multiple: false, selected: null },
+        { id: 36, title: "Հարց 52 (Ա).", text: "Ինչպե՞ս կարելի է մանրատել բանջարեղենը.", options: ["օղակաձև, շրջանաձև", "T-աձև", "խորանարդիկաձև", "ծղոտիկաձև", "աստղիկաձև", "բոլորակաձև, բլթակաձև", "հեսանաձև, պատառիկաձև"], correct: [0, 2, 3, 5, 6], multiple: true, selected: [] },
+        { id: 37, title: "Հարց 52 (Բ).", text: "Ո՞ր շարքում են թվարկված միայն տերևաբանջարները.", options: ["նեխուր, սեզատերև", "տերևային և տերևակոթունային նեխուր/քարավուզ/, տերևային մաղադանոս, խավրծիլ", "կաղամբ, հազար...", "կաղամբ, ստեպղին..."], correct: [1], multiple: false, selected: null },
+        { id: 38, title: "Հարց 53.", text: "Ինչու՞ են շամպայնի բաժակները նեղ և երկար.", options: ["որպեսզի տաքանալիս համը չփոխվի", "որպեսզի հարմար լինի բռնել", "որպեսզի շամպայն ավելի լավ փրփրի և համը երկար մնա", "որպեսզի ուշ տաքանա"], correct: [2], multiple: false, selected: null },
+        { id: 39, title: "Հարց 55 (Ա).", text: "Ցորենի ձավարի տեսակներն են․", options: ["հում ձավար...", "բրինձ...", "կորկոտ...", "բլղուրը, հում ձավար, աղացած հում ձավարը, խաշած և աղացած հում ձավարը, կորկոտը"], correct: [3], multiple: false, selected: null },
+        { id: 40, title: "Հարց 55 (Բ).", text: "Ինչպե՞ս է որոշվում գործվածքի ռապորտը․", options: ["հենքաթելերի քանակով", "հենքաթելերի և միջնաթելերի քանակով", "նրանում եղած հենքաթելերի և միջնաթելերի քանակով", "գործվածքում եղած քանակով"], correct: [2], multiple: false, selected: null },
+        { id: 41, title: "Հարց 56.", text: "Ժապավենասղոցման հաստոցի մասեր չէ.", options: ["իրան", "սղոցների շրջանակ", "թափանիվ", "արգելակի ոտնակ"], correct: [1], multiple: false, selected: null },
+        { id: 42, title: "Հարց 57.", text: "Գոգնացի գծագրի կառուցման ժամանակ ինչպե՞ս են գծում գոտկագիծը․", options: ["հորիզոնական հոծ գծով՝ թղթի վերևի եզրից 30-40 սմ-ով դեպի ներքև", "հորիզոնական հոծ գծով՝ 30-40 մմ", "ուղղաձիգ գծով...", "ուղղաձիգ գծով աջից..."], correct: [0], multiple: false, selected: null },
+        { id: 43, title: "Հարց 58.", text: "Բամբակե գործվածքները կարելու համար օգտագործվող բամբակե թելերի համարը․", options: ["N1...N3", "N10...N100", "N40...N80", "N4...N8"], correct: [2], multiple: false, selected: null },
+        { id: 44, title: "Հարց 59.", text: "Ի՞նչ դիրքով պետք է կանգնել երկայնական սղոցման ժամանակ․", options: ["իրանը ամբողջությամբ առաջ...", "իրանը մի փոքր առաջ, կրունկները 90°", "իրանը մի փոքր առաջ, ոտնաթաթերը միմյանց նկատմամբ կազմեն 90° անկյուն", "իրանը մի փոքր առաջ, 30°"], correct: [2], multiple: false, selected: null },
+        { id: 45, title: "Հարց 60.", text: "Ֆրոնտալ պրոյեկտող BC հատվածի երկարությունը 20 մմ է, պրոֆիլ պրոյեկցիայի երկարությունը․", options: ["20սմ", "կետ", "20 մմ", "10 մմ"], correct: [2], multiple: false, selected: null },
+        { id: 46, title: "Հարց 61.", text: "Լրացուցիչ հարց 1 (Տեխնոլոգիա և արտադրություն)", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 47, title: "Հարց 62.", text: "Լրացուցիչ հարց 2", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 48, title: "Հարց 63.", text: "Լրացուցիչ հարց 3", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 49, title: "Հարց 64.", text: "Լրացուցիչ հարց 4", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 50, title: "Հարց 65.", text: "Լրացուցիչ հարց 5", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 51, title: "Հարց 66.", text: "Լրացուցիչ հարց 6", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 52, title: "Հարց 67.", text: "Լրացուցիչ հարց 7", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 53, title: "Հարց 68.", text: "Լրացուցիչ հարց 8", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 54, title: "Հարց 69.", text: "Լրացուցիչ հարց 9", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 55, title: "Հարց 70.", text: "Լրացուցիչ հարց 10", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 56, title: "Հարց 71.", text: "Լրացուցիչ հարց 11", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 57, title: "Հարց 72.", text: "Լրացուցիչ հարց 12", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 58, title: "Հարց 73.", text: "Լրացուցիչ հարց 13", options: ["Տարբերակ Բ", "Տարբերակ Ա", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 59, title: "Հարց 74.", text: "Լրացուցիչ հարց 14", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null },
+        { id: 60, title: "Հարց 75.", text: "գաղտնի հարց 15", options: ["Տարբերակ Ա", "Տարբերակ Բ", "Տարբերակ Գ", "Տարբերակ Դ"], correct: [0], multiple: false, selected: null }
+    ];
+
+    let currentIdx = 0;
+    let tempSelected = null;
+
+    function initTest() {
+        const grid = document.getElementById('questionGrid');
+        grid.innerHTML = '';
+        questions.forEach((q, idx) => {
+            const btn = document.createElement('button');
+            const isAnswered = q.multiple ? (q.selected && q.selected.length > 0) : (q.selected !== null);
+            btn.className = `q-btn ${idx === 0 ? 'current' : ''} ${isAnswered ? 'answered' : ''}`;
+            btn.innerText = q.id;
+            btn.onclick = () => selectQuestion(idx);
+            grid.appendChild(btn);
+        });
+        loadQuestion(currentIdx);
+    }
+
+    function loadQuestion(idx) {
+        currentIdx = idx;
+        const q = questions[idx];
+        document.getElementById('questionTitle').innerText = `${q.title} ${q.text}`;
+        
+        tempSelected = q.multiple ? (q.selected ? [...q.selected] : []) : q.selected;
+
+        const list = document.getElementById('optionsList');
+        list.innerHTML = '';
+        
+        q.options.forEach((opt, oIdx) => {
+            const label = document.createElement('label');
+            label.className = 'option-item';
+            
+            if (q.multiple) {
+                const isChecked = tempSelected && tempSelected.includes(oIdx);
+                label.innerHTML = `
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="handleMultipleClick(${oIdx}, this)">
+                    <span>${opt}</span>
+                `;
+            } else {
+                const isChecked = tempSelected === oIdx;
+                label.innerHTML = `
+                    <input type="radio" name="option" ${isChecked ? 'checked' : ''} onclick="handleSingleClick(${oIdx})">
+                    <span>${opt}</span>
+                `;
+            }
+            list.appendChild(label);
+        });
+
+        updateGrid();
+    }
+
+    function handleSingleClick(oIdx) {
+        tempSelected = oIdx;
+    }
+
+    function handleMultipleClick(oIdx, checkbox) {
+        if (!Array.isArray(tempSelected)) {
+            tempSelected = [];
+        }
+        if (checkbox.checked) {
+            if (!tempSelected.includes(oIdx)) {
+                tempSelected.push(oIdx);
+            }
+        } else {
+            tempSelected = tempSelected.filter(item => item !== oIdx);
+        }
+    }
+
+    function saveCurrentAnswer() {
+        questions[currentIdx].selected = tempSelected;
+        updateGrid();
+        alert("Պատասխանը հաջողությամբ պահպանվեց։");
+    }
+
+    function updateGrid() {
+        const buttons = document.querySelectorAll('.q-btn');
+        buttons.forEach((btn, idx) => {
+            const q = questions[idx];
+            const isAnswered = q.multiple ? (q.selected && q.selected.length > 0) : (q.selected !== null);
+            btn.className = `q-btn ${idx === currentIdx ? 'current' : ''} ${isAnswered ? 'answered' : ''}`;
+        });
+    }
+
+    function nextQuestion() {
+        if (currentIdx < questions.length - 1) loadQuestion(currentIdx + 1);
+    }
+
+    function prevQuestion() {
+        if (currentIdx > 0) loadQuestion(currentIdx - 1);
+    }
+
+    function selectQuestion(idx) {
+        loadQuestion(idx);
+    }
+
+    function finishTest() {
+        let score = 0;
+        questions.forEach(q => {
+            if (q.multiple) {
+                if (q.selected && q.selected.length > 0) {
+                    const sortedSelected = [...q.selected].sort();
+                    const sortedCorrect = [...q.correct].sort();
+                    if (JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect)) {
+                        score++;
+                    }
+                }
+            } else {
+                if (q.selected === q.correct[0]) {
+                    score++;
+                }
+            }
+        });
+        alert(`Թեստը ավարտված է։ Ձեր միավորը՝ ${score} / ${questions.length}`);
+    }
+
+    let totalSeconds = 3 * 3600;
+    setInterval(() => {
+        if (totalSeconds > 0) {
+            totalSeconds--;
+            let h = Math.floor(totalSeconds / 3600);
+            let m = Math.floor((totalSeconds % 3600) / 60);
+            let s = totalSeconds % 60;
+            document.getElementById('timer').innerText = 
+                String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        }
+    }, 1000);
+
+    initTest();
+</script>
+
+</body>
+</html>
